@@ -1,14 +1,14 @@
 """
 FastAPI 백엔드 - Maritime Navigation System API
-(동적 경로 계산 및 모듈 경로 자동 추가 버전)
+(Neo4j Aura 연결 디버깅 버전)
 """
 import os
 import sys
 import json
+import traceback  # 에러 상세 추적용
 from typing import List, Dict, Any, Optional
 
-# [중요 1] 현재 파일(main.py)이 있는 폴더를 파이썬 검색 경로에 추가
-# 이걸 해야 'ModuleNotFoundError: No module named graph_rag_engine' 에러가 사라집니다.
+# 경로 설정
 current_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(current_dir)
 
@@ -16,17 +16,14 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-# 이제 sys.path에 경로가 추가되었으므로 import가 정상 작동합니다.
+# RAG 엔진 임포트
 try:
     from graph_rag_engine import GraphGuidedRAG
 except ImportError as e:
-    print(f"⚠️ 경고: graph_rag_engine을 불러올 수 없습니다. ({e})")
+    print(f"⚠️ 모듈 임포트 실패: {e}")
     GraphGuidedRAG = None
 
-app = FastAPI(
-    title="Maritime Cognitive Navigation System API",
-    version="1.0.0"
-)
+app = FastAPI(title="Maritime API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -36,179 +33,152 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# [중요 2] 파일 경로를 '절대 경로'로 동적 계산
-# backend/main.py -> 부모(backend) -> 부모(root) -> data/raw
+# 데이터 경로 설정
 BASE_DIR = os.path.dirname(current_dir)
 DATA_DIR = os.path.join(BASE_DIR, "data", "raw")
-
 SCENARIOS_PATH = os.path.join(DATA_DIR, "demo_scenarios.json")
-RULES_PATH = os.path.join(DATA_DIR, "colregs_rules.json")
-CASES_PATH = os.path.join(DATA_DIR, "kmst_cases.json")
 
-# 디버깅용: 서버 로그에 현재 데이터 경로 출력
-print(f"📂 데이터 경로 설정됨: {DATA_DIR}")
-
-# RAG 엔진 초기화
+# RAG 엔진 관리
 rag_engine = None
+connection_error = None  # 연결 에러 메시지 저장용
 
 def get_rag_engine():
-    """RAG 엔진 싱글톤"""
-    global rag_engine
-    if rag_engine is None:
-        if GraphGuidedRAG is None:
-            return None
-            
-        NEO4J_URI = os.getenv("NEO4J_URI", "bolt://localhost:7687")
-        NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")
-        NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "password")
-        GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+    global rag_engine, connection_error
+    
+    if rag_engine is not None:
+        return rag_engine
 
-        try:
-            rag_engine = GraphGuidedRAG(
-                neo4j_uri=NEO4J_URI,
-                neo4j_user=NEO4J_USER,
-                neo4j_password=NEO4J_PASSWORD,
-                gemini_api_key=GEMINI_API_KEY,
-                llm_model=os.getenv("LLM_MODEL", "gemini-2.0-flash-exp")
-            )
-        except Exception as e:
-            print(f"❌ RAG 엔진 초기화 실패: {e}")
-            return None
-    return rag_engine
+    # 환경 변수 가져오기
+    NEO4J_URI = os.getenv("NEO4J_URI", "")
+    NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")
+    NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "")
+    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
+    # 로그에 설정 상태 출력 (비밀번호는 숨김)
+    print(f"🔌 Neo4j 연결 시도: URI={NEO4J_URI}, User={NEO4J_USER}, PW={'*' * len(NEO4J_PASSWORD) if NEO4J_PASSWORD else 'EMPTY'}")
+
+    if not NEO4J_URI or not NEO4J_PASSWORD:
+        connection_error = "Render 환경변수(NEO4J_URI 또는 NEO4J_PASSWORD)가 설정되지 않았습니다."
+        print(f"❌ {connection_error}")
+        return None
+
+    try:
+        # 엔진 초기화 시도
+        rag_engine = GraphGuidedRAG(
+            neo4j_uri=NEO4J_URI,
+            neo4j_user=NEO4J_USER,
+            neo4j_password=NEO4J_PASSWORD,
+            gemini_api_key=GEMINI_API_KEY,
+            llm_model=os.getenv("LLM_MODEL", "gemini-2.5-flash")
+        )
+        
+        # 연결 테스트 (실제 쿼리를 날려봄)
+        rag_engine.driver.verify_connectivity()
+        print("✅ Neo4j 연결 성공!")
+        connection_error = None  # 에러 초기화
+        return rag_engine
+
+    except Exception as e:
+        rag_engine = None
+        connection_error = f"Neo4j 연결 실패: {str(e)}"
+        print(f"❌ {connection_error}")
+        traceback.print_exc() # 로그에 상세 에러 출력
+        return None
 
 # Pydantic 모델
 class AnalyzeRequest(BaseModel):
     scenario_id: Optional[str] = None
     situation_data: Optional[Dict[str, Any]] = None
 
-
 class AnalyzeResponse(BaseModel):
     scenario_id: Optional[str]
     analysis: Dict[str, Any]
     reasoning_steps: List[Dict[str, Any]]
 
-
-# 헬퍼 함수: JSON 파일 안전하게 읽기
+# 파일 로드 헬퍼
 def load_json_file(filepath):
     if not os.path.exists(filepath):
-        print(f"❌ 파일을 찾을 수 없음: {filepath}")
-        # 파일이 없을 경우 빈 리스트 반환하여 서버 다운 방지
         return []
     try:
         with open(filepath, 'r', encoding='utf-8') as f:
             return json.load(f)
-    except Exception as e:
-        print(f"❌ 파일 읽기 에러 ({filepath}): {e}")
+    except:
         return []
 
-
-# API 엔드포인트
 @app.get("/")
 async def root():
+    rag = get_rag_engine()
+    status = "connected" if rag else "disconnected"
     return {
-        "service": "Maritime Cognitive Navigation System",
-        "status": "operational",
-        "data_path_checked": os.path.exists(DATA_DIR)
+        "status": status,
+        "last_error": connection_error,
+        "env_check": {
+            "uri_set": bool(os.getenv("NEO4J_URI")),
+            "pw_set": bool(os.getenv("NEO4J_PASSWORD"))
+        }
     }
-
 
 @app.get("/scenarios")
 async def list_scenarios():
     scenarios = load_json_file(SCENARIOS_PATH)
-    scenario_list = [
-        {
-            "scenario_id": s.get("scenario_id"),
-            "title": s.get("title"),
-            "thumbnail_desc": s.get("thumbnail_desc"),
-            "difficulty": s.get("difficulty"),
-            "risk_level": s.get("risk_level")
-        }
-        for s in scenarios
-    ]
-    return {"scenarios": scenario_list, "count": len(scenario_list)}
-
+    return {"scenarios": scenarios, "count": len(scenarios)}
 
 @app.get("/scenarios/{scenario_id}")
 async def get_scenario(scenario_id: str):
     scenarios = load_json_file(SCENARIOS_PATH)
     scenario = next((s for s in scenarios if s.get("scenario_id") == scenario_id), None)
-
-    if scenario is None:
+    if not scenario:
         raise HTTPException(status_code=404, detail="Scenario not found")
     return scenario
 
-
 @app.post("/analyze", response_model=AnalyzeResponse)
 async def analyze_situation(request: AnalyzeRequest):
+    # 1. 시나리오 데이터 로드
+    if request.scenario_id:
+        scenarios = load_json_file(SCENARIOS_PATH)
+        situation_data = next((s for s in scenarios if s.get("scenario_id") == request.scenario_id), None)
+    else:
+        situation_data = request.situation_data
+
+    # 2. RAG 엔진 로드
+    rag = get_rag_engine()
+    
+    # 3. 연결 실패 시 에러를 JSON으로 예쁘게 반환 (500 에러 대신)
+    if not rag:
+        error_msg = connection_error if connection_error else "알 수 없는 연결 오류"
+        return AnalyzeResponse(
+            scenario_id=request.scenario_id,
+            analysis={
+                "error": "DB Connection Failed",
+                "recommendations": {
+                    "priority_actions": [],
+                    "warnings": [f"DB 연결 실패: {error_msg}"]
+                }
+            },
+            reasoning_steps=[
+                {
+                    "step_name": "Connection Error",
+                    "description": "Neo4j 데이터베이스 연결 실패",
+                    "reasoning": f"상세 에러: {error_msg}\nRender 환경변수의 NEO4J_URI가 'neo4j+s://'로 시작하는지 확인하세요."
+                }
+            ]
+        )
+
+    # 4. 분석 실행
     try:
-        if request.scenario_id:
-            scenarios = load_json_file(SCENARIOS_PATH)
-            situation_data = next(
-                (s for s in scenarios if s.get("scenario_id") == request.scenario_id),
-                None
-            )
-            if situation_data is None:
-                raise HTTPException(status_code=404, detail="Scenario not found")
-        elif request.situation_data:
-            situation_data = request.situation_data
-        else:
-            raise HTTPException(status_code=400, detail="Either scenario_id or situation_data required")
-
-        rag = get_rag_engine()
-        
-        # RAG 엔진 연결 실패 시 안전 장치
-        if rag is None:
-             return AnalyzeResponse(
-                scenario_id=request.scenario_id,
-                analysis={
-                    "situation": "System Error", 
-                    "recommendations": {"priority_actions": [{"action": "백엔드 연결 확인 필요", "priority": 1}]}
-                },
-                reasoning_steps=[{"step": "Error", "detail": "RAG Engine load failed"}]
-            )
-
         result = rag.analyze_situation(situation_data)
-
         return AnalyzeResponse(
             scenario_id=request.scenario_id,
             analysis=result,
             reasoning_steps=result.get("reasoning_history", [])
         )
-
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
-
-
-@app.get("/rules")
-async def list_rules():
-    rules = load_json_file(RULES_PATH)
-    rule_list = [
-        {
-            "id": r.get("id"),
-            "title": r.get("title"),
-            "category": r.get("category"),
-            "summary": r.get("summary")
-        }
-        for r in rules
-    ]
-    return {"rules": rule_list, "count": len(rule_list)}
-
-
-@app.get("/cases")
-async def list_cases():
-    cases = load_json_file(CASES_PATH)
-    case_list = [
-        {
-            "case_id": c.get("case_id"),
-            "title": c.get("title"),
-            "date": c.get("date"),
-            "situation_type": c.get("situation_type")
-        }
-        for c in cases
-    ]
-    return {"cases": case_list, "count": len(case_list)}
-
+        # 실행 중 에러도 잡아서 보여줌
+        return AnalyzeResponse(
+            scenario_id=request.scenario_id,
+            analysis={"error": str(e), "recommendations": []},
+            reasoning_steps=[{"step_name": "Runtime Error", "reasoning": str(e)}]
+        )
 
 if __name__ == "__main__":
     import uvicorn
