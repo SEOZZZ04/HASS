@@ -59,7 +59,7 @@ cd HASS
 
 # 2. 환경 변수 설정
 cp .env.example .env
-# .env 파일에서 NEO4J_URI, OPENAI_API_KEY 설정
+# .env 파일에서 NEO4J_URI, GEMINI_API_KEY 설정
 
 # 3. 의존성 설치
 pip install -r requirements.txt
@@ -78,9 +78,25 @@ streamlit run frontend/app.py
 
 브라우저: `http://localhost:8501`
 
-### Render 배포
+### Render 배포 (GitHub → Render)
 
-자세한 가이드: [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
+**⚡ 빠른 배포 3단계:**
+
+1. **API 키 발급**
+   - Neo4j AuraDB: https://neo4j.com/cloud/aura/
+   - Google Gemini: https://aistudio.google.com/app/apikey
+
+2. **Neo4j 데이터 로딩** (로컬에서 한 번만)
+   ```bash
+   python backend/neo4j_loader.py
+   ```
+
+3. **Render 배포**
+   - Render에서 GitHub 리포지토리 연결
+   - Environment Variables에 API 키 입력
+   - 자동 배포!
+
+📚 **상세 가이드**: [RENDER_DEPLOYMENT.md](RENDER_DEPLOYMENT.md) - **필독!**
 
 ---
 
@@ -133,10 +149,11 @@ HASS/
 - 무료 계정: [Neo4j Aura](https://neo4j.com/cloud/aura/)
 - 필요 정보: URI, Username, Password
 
-### 2. OpenAI API
-- 계정: [OpenAI Platform](https://platform.openai.com/)
-- API 키 형식: `sk-xxxxx`
-- 권장 모델: GPT-4 (또는 GPT-3.5-turbo로 비용 절감)
+### 2. Google Gemini API
+- 발급: [Google AI Studio](https://aistudio.google.com/app/apikey)
+- API 키 형식: `AIzaSy...`
+- 권장 모델: gemini-2.0-flash-exp (무료!)
+- **장점**: 무료 할당량 풍부, OpenAI보다 저렴
 
 ---
 

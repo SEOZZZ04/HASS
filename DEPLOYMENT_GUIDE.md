@@ -11,10 +11,11 @@
    - Username: `neo4j`
    - Password: (생성 시 제공된 비밀번호)
 
-### 2. OpenAI API 키 발급
-1. [OpenAI Platform](https://platform.openai.com/) 접속
-2. API Keys 섹션에서 새 키 생성
+### 2. Google Gemini API 키 발급
+1. [Google AI Studio](https://aistudio.google.com/app/apikey) 접속
+2. "Create API Key" 버튼 클릭하여 키 생성
 3. 키 복사 및 안전하게 보관
+4. **무료 할당량 풍부!** 시연용으로 완전 무료
 
 ### 3. Render 계정 생성
 1. [Render](https://render.com/) 접속
@@ -35,7 +36,7 @@ cp .env.example .env
 # NEO4J_URI=neo4j+s://your-instance.databases.neo4j.io
 # NEO4J_USER=neo4j
 # NEO4J_PASSWORD=your_password
-# OPENAI_API_KEY=sk-your_key
+# GEMINI_API_KEY=your_gemini_key
 
 # 3. 의존성 설치
 pip install -r requirements.txt
@@ -101,8 +102,8 @@ Render 대시보드 → Environment → "Add Environment Variable":
 | `NEO4J_URI` | `neo4j+s://xxxxx.databases.neo4j.io` |
 | `NEO4J_USER` | `neo4j` |
 | `NEO4J_PASSWORD` | (Neo4j 비밀번호) |
-| `OPENAI_API_KEY` | `sk-xxxxx` |
-| `LLM_MODEL` | `gpt-4` |
+| `GEMINI_API_KEY` | `AIzaSy...` |
+| `LLM_MODEL` | `gemini-2.0-flash-exp` |
 | `PORT` | `8501` (Streamlit 기본 포트) |
 
 #### 4. 배포 시작
