@@ -18,15 +18,26 @@ app = FastAPI(
 # CORS 설정
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 프로덕션에서는 특정 도메인으로 제한
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# --- [수정된 부분] 동적 경로 설정 ---
+# 현재 파일(main.py)의 위치를 기준으로 프로젝트 루트 경로를 찾습니다.
+# backend/main.py -> 부모 디렉토리(backend) -> 부모 디렉토리(프로젝트 루트)
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATA_DIR = os.path.join(BASE_DIR, "data", "raw")
+
+# 데이터 파일 경로 정의
+SCENARIOS_PATH = os.path.join(DATA_DIR, "demo_scenarios.json")
+RULES_PATH = os.path.join(DATA_DIR, "colregs_rules.json")
+CASES_PATH = os.path.join(DATA_DIR, "kmst_cases.json")
+# --------------------------------
+
 # RAG 엔진 초기화
 rag_engine = None
-
 
 def get_rag_engine():
     """RAG 엔진 싱글톤"""
@@ -74,7 +85,8 @@ async def root():
 async def list_scenarios():
     """시연용 시나리오 목록 조회"""
     try:
-        with open("/home/user/HASS/data/raw/demo_scenarios.json", 'r', encoding='utf-8') as f:
+        # 수정된 경로 변수 사용
+        with open(SCENARIOS_PATH, 'r', encoding='utf-8') as f:
             scenarios = json.load(f)
 
         # 메타데이터만 반환
@@ -91,6 +103,7 @@ async def list_scenarios():
 
         return {"scenarios": scenario_list, "count": len(scenario_list)}
     except Exception as e:
+        print(f"Error loading scenarios from {SCENARIOS_PATH}: {e}") # 로그에 경로 출력
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -98,7 +111,8 @@ async def list_scenarios():
 async def get_scenario(scenario_id: str):
     """특정 시나리오 상세 조회"""
     try:
-        with open("/home/user/HASS/data/raw/demo_scenarios.json", 'r', encoding='utf-8') as f:
+        # 수정된 경로 변수 사용
+        with open(SCENARIOS_PATH, 'r', encoding='utf-8') as f:
             scenarios = json.load(f)
 
         scenario = next((s for s in scenarios if s["scenario_id"] == scenario_id), None)
@@ -117,13 +131,12 @@ async def get_scenario(scenario_id: str):
 async def analyze_situation(request: AnalyzeRequest):
     """
     상황 분석 및 의사결정 지원
-
-    시나리오 ID 또는 직접 상황 데이터를 받아 분석
     """
     try:
         # 시나리오 로드
         if request.scenario_id:
-            with open("/home/user/HASS/data/raw/demo_scenarios.json", 'r', encoding='utf-8') as f:
+            # 수정된 경로 변수 사용
+            with open(SCENARIOS_PATH, 'r', encoding='utf-8') as f:
                 scenarios = json.load(f)
             situation_data = next(
                 (s for s in scenarios if s["scenario_id"] == request.scenario_id),
@@ -156,7 +169,8 @@ async def analyze_situation(request: AnalyzeRequest):
 async def list_rules():
     """COLREGs 규정 목록 조회"""
     try:
-        with open("/home/user/HASS/data/raw/colregs_rules.json", 'r', encoding='utf-8') as f:
+        # 수정된 경로 변수 사용
+        with open(RULES_PATH, 'r', encoding='utf-8') as f:
             rules = json.load(f)
 
         rule_list = [
@@ -178,7 +192,8 @@ async def list_rules():
 async def get_rule(rule_id: str):
     """특정 규정 상세 조회"""
     try:
-        with open("/home/user/HASS/data/raw/colregs_rules.json", 'r', encoding='utf-8') as f:
+        # 수정된 경로 변수 사용
+        with open(RULES_PATH, 'r', encoding='utf-8') as f:
             rules = json.load(f)
 
         rule = next((r for r in rules if r["id"] == rule_id), None)
@@ -197,7 +212,8 @@ async def get_rule(rule_id: str):
 async def list_cases():
     """해양안전심판원 재결서 목록 조회"""
     try:
-        with open("/home/user/HASS/data/raw/kmst_cases.json", 'r', encoding='utf-8') as f:
+        # 수정된 경로 변수 사용
+        with open(CASES_PATH, 'r', encoding='utf-8') as f:
             cases = json.load(f)
 
         case_list = [
@@ -219,7 +235,8 @@ async def list_cases():
 async def get_case(case_id: str):
     """특정 재결서 상세 조회"""
     try:
-        with open("/home/user/HASS/data/raw/kmst_cases.json", 'r', encoding='utf-8') as f:
+        # 수정된 경로 변수 사용
+        with open(CASES_PATH, 'r', encoding='utf-8') as f:
             cases = json.load(f)
 
         case = next((c for c in cases if c["case_id"] == case_id), None)
