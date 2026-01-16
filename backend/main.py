@@ -35,14 +35,14 @@ def get_rag_engine():
         NEO4J_URI = os.getenv("NEO4J_URI", "bolt://localhost:7687")
         NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")
         NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "password")
-        OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+        GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
         rag_engine = GraphGuidedRAG(
             neo4j_uri=NEO4J_URI,
             neo4j_user=NEO4J_USER,
             neo4j_password=NEO4J_PASSWORD,
-            openai_api_key=OPENAI_API_KEY,
-            llm_model=os.getenv("LLM_MODEL", "gpt-4")
+            gemini_api_key=GEMINI_API_KEY,
+            llm_model=os.getenv("LLM_MODEL", "gemini-2.0-flash-exp")
         )
     return rag_engine
 

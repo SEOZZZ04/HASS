@@ -4,7 +4,7 @@ Neo4j 그래프를 활용한 맥락 기반 규정 검색
 """
 from typing import List, Dict, Any, Optional, Tuple
 from neo4j import GraphDatabase
-import openai
+import google.generativeai as genai
 from dataclasses import dataclass
 import json
 
@@ -24,18 +24,19 @@ class GraphGuidedRAG:
     """팔란티어식 Graph-Guided RAG 엔진"""
 
     def __init__(self, neo4j_uri: str, neo4j_user: str, neo4j_password: str,
-                 openai_api_key: str, llm_model: str = "gpt-4"):
+                 gemini_api_key: str, llm_model: str = "gemini-2.0-flash-exp"):
         """
         Args:
             neo4j_uri: Neo4j 데이터베이스 URI
             neo4j_user: Neo4j 사용자명
             neo4j_password: Neo4j 비밀번호
-            openai_api_key: OpenAI API 키
-            llm_model: 사용할 LLM 모델
+            gemini_api_key: Google Gemini API 키
+            llm_model: 사용할 LLM 모델 (gemini-2.0-flash-exp 등)
         """
         self.driver = GraphDatabase.driver(neo4j_uri, auth=(neo4j_user, neo4j_password))
-        openai.api_key = openai_api_key
+        genai.configure(api_key=gemini_api_key)
         self.llm_model = llm_model
+        self.model = genai.GenerativeModel(llm_model)
         self.reasoning_history: List[ReasoningStep] = []
 
     def close(self):
@@ -279,25 +280,28 @@ class GraphGuidedRAG:
         # 프롬프트 구성
         prompt = self._build_analysis_prompt(situation_data, rules, cases)
 
-        # LLM 호출
+        # LLM 호출 (Gemini)
         try:
-            response = openai.chat.completions.create(
-                model=self.llm_model,
-                messages=[
-                    {"role": "system", "content": "당신은 국제해상충돌방지규칙(COLREGs) 전문가입니다."},
-                    {"role": "user", "content": prompt}
-                ],
-                temperature=0.3,
-                max_tokens=1000
+            # 시스템 프롬프트와 사용자 프롬프트 결합
+            full_prompt = f"""당신은 국제해상충돌방지규칙(COLREGs) 전문가입니다.
+
+{prompt}"""
+
+            response = self.model.generate_content(
+                full_prompt,
+                generation_config={
+                    'temperature': 0.3,
+                    'max_output_tokens': 1000,
+                }
             )
-            analysis = response.choices[0].message.content
+            analysis = response.text
         except Exception as e:
             analysis = f"LLM 분석 실패: {e}\n\n기본 분석: 관련 규정 {len(rules)}개, 유사 사례 {len(cases)}개 검토 필요."
 
         self.add_reasoning_step(ReasoningStep(
             step_name="LLM Analysis",
             step_number=5,
-            description="LLM 기반 종합 분석",
+            description="Gemini 기반 종합 분석",
             reasoning=analysis
         ))
 
@@ -393,14 +397,15 @@ if __name__ == "__main__":
     NEO4J_URI = os.getenv("NEO4J_URI", "bolt://localhost:7687")
     NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")
     NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "password")
-    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
     # RAG 엔진 초기화
     rag = GraphGuidedRAG(
         neo4j_uri=NEO4J_URI,
         neo4j_user=NEO4J_USER,
         neo4j_password=NEO4J_PASSWORD,
-        openai_api_key=OPENAI_API_KEY
+        gemini_api_key=GEMINI_API_KEY,
+        llm_model="gemini-2.0-flash-exp"
     )
 
     # 테스트 시나리오 로드

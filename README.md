@@ -133,10 +133,11 @@ HASS/
 - 무료 계정: [Neo4j Aura](https://neo4j.com/cloud/aura/)
 - 필요 정보: URI, Username, Password
 
-### 2. OpenAI API
-- 계정: [OpenAI Platform](https://platform.openai.com/)
-- API 키 형식: `sk-xxxxx`
-- 권장 모델: GPT-4 (또는 GPT-3.5-turbo로 비용 절감)
+### 2. Google Gemini API
+- 발급: [Google AI Studio](https://aistudio.google.com/app/apikey)
+- API 키 형식: `AIzaSy...`
+- 권장 모델: gemini-2.0-flash-exp (무료!)
+- **장점**: 무료 할당량 풍부, OpenAI보다 저렴
 
 ---
 

@@ -1,6 +1,6 @@
 # 🔑 API 키 설정 가이드
 
-이 프로젝트는 Neo4j와 OpenAI API를 사용합니다. 아래 단계를 따라 필요한 API 키를 발급받으세요.
+이 프로젝트는 Neo4j와 Google Gemini API를 사용합니다. 아래 단계를 따라 필요한 API 키를 발급받으세요.
 
 ---
 
@@ -55,49 +55,61 @@ Neo4j Browser에서 확인:
 
 ---
 
-## 2️⃣ OpenAI API 키 설정
+## 2️⃣ Google Gemini API 키 설정
 
 ### API 키 발급
 
-1. **OpenAI 계정 생성**
-   - URL: https://platform.openai.com/
-   - "Sign up" 또는 기존 계정 로그인
+1. **Google AI Studio 접속**
+   - URL: https://aistudio.google.com/app/apikey
+   - Google 계정으로 로그인
 
 2. **API 키 생성**
-   - Dashboard → "API keys" 메뉴
-   - "Create new secret key" 클릭
-   - Key name: `maritime-nav` (원하는 이름)
-   - "Create secret key" 클릭
+   - "Create API Key" 버튼 클릭
+   - 프로젝트 선택 (또는 새 프로젝트 생성)
+   - API 키가 즉시 생성됩니다
 
 3. **API 키 복사** ⚠️ 중요!
 
    ```
-   sk-proj-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+   AIzaSy... (40자 정도)
    ```
 
-   **창을 닫으면 다시 볼 수 없습니다.** 안전하게 저장하세요.
+   **안전하게 저장하세요.**
 
 4. **.env 파일에 추가**
 
    ```bash
-   OPENAI_API_KEY=sk-proj-xxxxxxxxxx
+   GEMINI_API_KEY=AIzaSy...
    ```
 
-### 사용량 제한 설정 (권장)
+### Gemini 모델 정보
 
-1. **Billing 설정**
-   - Dashboard → "Settings" → "Billing"
-   - "Add payment method" (크레딧 카드 등록)
+현재 사용 가능한 Gemini 모델:
 
-2. **사용량 한도 설정**
-   - "Usage limits" → "Set a monthly budget"
-   - 권장: $5 - $10/월 (시연용으로 충분)
-   - 한도 도달 시 알림 설정: 80%, 100%
+| 모델 | 특징 | 비용 (2024년 기준) |
+|-----|------|-------------------|
+| **gemini-2.0-flash-exp** | 최신 실험 모델, 빠르고 강력 | 무료 (제한적) |
+| **gemini-1.5-flash** | 빠른 응답, 가벼운 작업 | 무료 할당량 풍부 |
+| **gemini-1.5-pro** | 고품질 분석, 복잡한 작업 | 무료 할당량 제한적 |
 
-3. **비용 예상**
-   - GPT-4: 시나리오 분석 1회당 약 $0.10 - $0.20
-   - GPT-3.5-turbo: 시나리오 분석 1회당 약 $0.01 - $0.02
-   - 시연 10회 기준: GPT-4 $2, GPT-3.5-turbo $0.20
+**권장**: `gemini-2.0-flash-exp` (최신 모델)
+
+### 무료 할당량
+
+Google Gemini API는 **무료 할당량**이 있습니다:
+
+- **gemini-1.5-flash**: 15 RPM (분당 요청 수), 1,000,000 TPM (분당 토큰 수)
+- **gemini-1.5-pro**: 2 RPM, 32,000 TPM
+- **gemini-2.0-flash-exp**: 실험 모델로 제한적 무료 제공
+
+시연용으로는 **충분히 무료**로 사용 가능합니다!
+
+### API 키 사용량 확인
+
+1. Google Cloud Console: https://console.cloud.google.com/
+2. "APIs & Services" → "Enabled APIs"
+3. "Generative Language API" 선택
+4. "Quotas" 탭에서 사용량 확인
 
 ---
 
@@ -119,13 +131,14 @@ NEO4J_URI=neo4j+s://abc123xyz.databases.neo4j.io
 NEO4J_USER=neo4j
 NEO4J_PASSWORD=MySecretPassword123
 
-# OpenAI API 키
-OPENAI_API_KEY=sk-proj-abcdefghijklmnopqrstuvwxyz1234567890
+# Google Gemini API 키
+GEMINI_API_KEY=AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZ1234567
 
-# LLM 모델 선택 (비용 고려)
-# GPT-4: 느리지만 정확, 비쌈 ($0.10/분석)
-# GPT-3.5-turbo: 빠르고 저렴 ($0.01/분석)
-LLM_MODEL=gpt-4
+# LLM 모델 선택
+# gemini-2.0-flash-exp: 최신 실험 모델 (권장)
+# gemini-1.5-flash: 빠르고 가벼움
+# gemini-1.5-pro: 고품질 분석
+LLM_MODEL=gemini-2.0-flash-exp
 
 # 서버 포트
 PORT=8000
@@ -158,8 +171,8 @@ cat .gitignore | grep .env
 | `NEO4J_URI` | Neo4j 연결 URI | `neo4j+s://abc.databases.neo4j.io` |
 | `NEO4J_USER` | Neo4j 사용자명 | `neo4j` |
 | `NEO4J_PASSWORD` | Neo4j 비밀번호 | `MySecretPass123` |
-| `OPENAI_API_KEY` | OpenAI API 키 | `sk-proj-xxxxx` |
-| `LLM_MODEL` | 사용할 모델 | `gpt-4` 또는 `gpt-3.5-turbo` |
+| `GEMINI_API_KEY` | Google Gemini API 키 | `AIzaSy...` |
+| `LLM_MODEL` | 사용할 모델 | `gemini-2.0-flash-exp` |
 | `PORT` | 포트 (자동 설정) | `8501` |
 
 4. "Save Changes" 클릭
@@ -191,21 +204,18 @@ driver.close()
 ```
 
 ```bash
-# OpenAI API 테스트
+# Gemini API 테스트
 python -c "
-import openai
+import google.generativeai as genai
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
-openai.api_key = os.getenv('OPENAI_API_KEY')
-response = openai.chat.completions.create(
-    model='gpt-3.5-turbo',
-    messages=[{'role': 'user', 'content': 'Hello'}],
-    max_tokens=5
-)
-print('✅ OpenAI API 연결 성공!')
-print('응답:', response.choices[0].message.content)
+genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
+model = genai.GenerativeModel('gemini-2.0-flash-exp')
+response = model.generate_content('Hello')
+print('✅ Gemini API 연결 성공!')
+print('응답:', response.text)
 "
 ```
 
@@ -235,51 +245,72 @@ curl https://your-app.onrender.com/scenarios
 3. 비밀번호에 특수문자가 있으면 URL 인코딩 필요
 4. 방화벽/VPN이 7687 포트를 차단하는지 확인
 
-### OpenAI API 오류
+### Gemini API 오류
 
 ```
-❌ AuthenticationError: Incorrect API key
+❌ InvalidArgument: API key not valid
 ```
 
 **해결책:**
-1. API 키가 `sk-proj-` 또는 `sk-`로 시작하는지 확인
+1. API 키가 올바르게 복사되었는지 확인
 2. 키 복사 시 공백이 없는지 확인
-3. OpenAI 계정 상태 확인 (https://platform.openai.com/)
-4. 크레딧 잔액 확인
+3. Google AI Studio에서 키가 활성화되어 있는지 확인
+4. API 사용량 할당량 확인
 
 ```
-❌ RateLimitError: You exceeded your quota
+❌ ResourceExhausted: Quota exceeded
 ```
 
 **해결책:**
-1. Billing 설정 확인
-2. 사용량 한도 증가
-3. 또는 `LLM_MODEL=gpt-3.5-turbo`로 변경 (저렴)
+1. Google Cloud Console에서 할당량 확인
+2. 잠시 후 다시 시도 (분당 요청 수 제한)
+3. 또는 다른 모델로 변경 (`gemini-1.5-flash` 등)
 
 ---
 
-## 💰 비용 최적화
+## 💰 비용 비교
 
-### 개발/테스트 시
+### Gemini vs OpenAI
 
+| 항목 | Gemini | OpenAI |
+|------|--------|--------|
+| **무료 할당량** | ✅ 풍부 (1.5-flash) | ❌ 제한적 |
+| **시연용 비용** | 무료 | $1-2 |
+| **개발용 비용** | 거의 무료 | $10-20 |
+| **품질** | 매우 우수 | 매우 우수 |
+| **속도** | 빠름 | 빠름 |
+
+**결론**: Gemini는 시연 및 개발용으로 **완전 무료** 또는 매우 저렴합니다!
+
+---
+
+## 🎯 모델 선택 가이드
+
+### 용도별 권장 모델
+
+**시연/데모:**
 ```bash
-# .env 파일에서
-LLM_MODEL=gpt-3.5-turbo  # GPT-4 대신 사용
+LLM_MODEL=gemini-2.0-flash-exp
 ```
+- 최신 모델
+- 빠른 응답
+- 무료
 
-### 프로덕션
-
+**개발/테스트:**
 ```bash
-LLM_MODEL=gpt-4  # 정확도 우선
+LLM_MODEL=gemini-1.5-flash
 ```
+- 안정적
+- 빠른 응답
+- 무료 할당량 풍부
 
-### 월 예상 비용
-
-| 사용 패턴 | GPT-4 | GPT-3.5-turbo |
-|----------|-------|---------------|
-| 시연 (10회) | $2 | $0.20 |
-| 개발 (100회) | $20 | $2 |
-| 실제 운영 (1000회) | $200 | $20 |
+**프로덕션:**
+```bash
+LLM_MODEL=gemini-1.5-pro
+```
+- 최고 품질
+- 복잡한 분석
+- 할당량 제한적 (필요 시 유료)
 
 ---
 
@@ -289,10 +320,9 @@ LLM_MODEL=gpt-4  # 정확도 우선
 
 - [ ] Neo4j AuraDB 인스턴스 생성 완료
 - [ ] Neo4j 연결 정보 안전하게 저장
-- [ ] OpenAI API 키 발급 완료
-- [ ] 사용량 한도 설정 완료 (권장)
+- [ ] Google Gemini API 키 발급 완료
 - [ ] `.env` 파일 생성 및 설정 완료
-- [ ] 로컬 연결 테스트 통과
+- [ ] 로컬 연결 테스트 통과 (Neo4j + Gemini)
 - [ ] Render 환경 변수 설정 완료
 - [ ] `.env` 파일이 `.gitignore`에 포함되어 있는지 확인
 
@@ -301,3 +331,9 @@ LLM_MODEL=gpt-4  # 정확도 우선
 **🎉 설정 완료!**
 
 이제 [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)를 참고하여 데이터를 로딩하고 배포하세요.
+
+**Gemini API의 장점:**
+- ✅ 무료 할당량 풍부
+- ✅ 빠른 응답 속도
+- ✅ 최신 AI 기술
+- ✅ Google의 안정적인 인프라
