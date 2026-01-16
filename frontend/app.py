@@ -4,6 +4,7 @@ AI의 사고 과정을 실시간으로 시각화
 """
 import streamlit as st
 import requests
+import os
 import json
 import time
 from typing import Dict, Any, List
@@ -84,7 +85,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # API 엔드포인트
-API_BASE_URL = "http://localhost:8000"
+API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
 
 
 def get_scenarios() -> List[Dict[str, Any]]:
