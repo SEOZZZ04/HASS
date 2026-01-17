@@ -16,3 +16,10 @@ streamlit==1.31.0
 # Data processing
 python-dotenv==1.0.0
 requests==2.31.0
+
+# RDF/Ontology
+rdflib==7.0.0
+
+# Visualization
+plotly==5.18.0
+networkx==3.2.1

@@ -1,0 +1,617 @@
+@prefix mso: <http://weoffice.ai/ontology/maritime-safety#> .
+@prefix colreg: <http://weoffice.ai/ontology/colregs#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dc: <http://purl.org/dc/elements/1.1/> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+
+# ===============================================
+# Maritime Safety Ontology (MSO) v2.0
+# LEGIS-XAI Style Ontology for Maritime Domain
+# Last Updated: 2026-01-17
+# ===============================================
+
+# Ontology Metadata
+mso: a owl:Ontology ;
+    dc:title "Maritime Safety Ontology"@en ;
+    dc:title "해양 안전 온톨로지"@ko ;
+    dc:description "Semantic ontology for maritime safety regulations, cases, and evidence based on LEGIS-XAI framework"@en ;
+    dc:creator "WeOffice AI Team" ;
+    dcterms:created "2026-01-17"^^xsd:date ;
+    owl:versionInfo "2.0" .
+
+# ===============================================
+# CLASSES (Entity Types)
+# ===============================================
+
+# 1. Regulation (규정)
+mso:Regulation a owl:Class ;
+    rdfs:label "Regulation"@en ;
+    rdfs:label "규정"@ko ;
+    rdfs:comment "International maritime regulations including COLREGs and national maritime laws"@en ;
+    rdfs:comment "국제해상충돌예방규칙(COLREGs) 및 해양안전법규"@ko .
+
+# 2. Article (조항)
+mso:Article a owl:Class ;
+    rdfs:label "Article"@en ;
+    rdfs:label "조항"@ko ;
+    rdfs:comment "Specific clauses within regulations"@en ;
+    rdfs:comment "규정의 세부 조항"@ko .
+
+# 3. SafetyIssue (안전 현안)
+mso:SafetyIssue a owl:Class ;
+    rdfs:label "Safety Issue"@en ;
+    rdfs:label "안전 현안"@ko ;
+    rdfs:comment "Maritime safety hazards and risk scenarios"@en ;
+    rdfs:comment "해양에서 발생 가능한 안전 위험 상황"@ko .
+
+# 4. MaritimeCase (해양 사례)
+mso:MaritimeCase a owl:Class ;
+    rdfs:label "Maritime Case"@en ;
+    rdfs:label "해양 사례"@ko ;
+    rdfs:comment "Actual maritime accident cases and tribunal judgments"@en ;
+    rdfs:comment "실제 해양 사고 및 준사고 판례"@ko .
+
+# 5. Vessel (선박)
+mso:Vessel a owl:Class ;
+    rdfs:label "Vessel"@en ;
+    rdfs:label "선박"@ko ;
+    rdfs:comment "Ships and vessels involved in maritime cases"@en ;
+    rdfs:comment "사건에 관련된 선박 엔티티"@ko .
+
+# 6. Evidence (증거)
+mso:Evidence a owl:Class ;
+    rdfs:label "Evidence"@en ;
+    rdfs:label "증거"@ko ;
+    rdfs:comment "Supporting evidence including radar, AIS, VDR, and visual data"@en ;
+    rdfs:comment "레이더, AIS, VDR, 목격자 등 사건을 뒷받침하는 데이터 및 증거"@ko .
+
+# 7. Action (조치)
+mso:Action a owl:Class ;
+    rdfs:label "Action"@en ;
+    rdfs:label "조치"@ko ;
+    rdfs:comment "Recommended safety actions and maneuvers"@en ;
+    rdfs:comment "권고되는 안전 조치"@ko .
+
+# 8. Actor (행위자)
+mso:Actor a owl:Class ;
+    rdfs:label "Actor"@en ;
+    rdfs:label "행위자"@ko ;
+    rdfs:comment "Human stakeholders including captains, officers, investigators"@en ;
+    rdfs:comment "해양 안전과 관련된 인적 주체"@ko .
+
+# 9. Lesson (교훈)
+mso:Lesson a owl:Class ;
+    rdfs:label "Lesson"@en ;
+    rdfs:label "교훈"@ko ;
+    rdfs:comment "Lessons learned from maritime cases"@en ;
+    rdfs:comment "사례에서 얻은 교훈 및 안전 지침"@ko .
+
+# 10. Location (위치)
+mso:Location a owl:Class ;
+    rdfs:label "Location"@en ;
+    rdfs:label "위치"@ko ;
+    rdfs:comment "Geographical locations and waterways"@en ;
+    rdfs:comment "사건 발생 수역 및 항로"@ko .
+
+# 11. Equipment (장비)
+mso:Equipment a owl:Class ;
+    rdfs:label "Equipment"@en ;
+    rdfs:label "장비"@ko ;
+    rdfs:comment "Navigation equipment and ship systems"@en ;
+    rdfs:comment "선박 장비 및 항해 시스템"@ko .
+
+# ===============================================
+# OBJECT PROPERTIES (Relationships)
+# ===============================================
+
+# 1. Regulation → SafetyIssue
+mso:addresses a owl:ObjectProperty ;
+    rdfs:label "addresses"@en ;
+    rdfs:label "해결함"@ko ;
+    rdfs:domain mso:Regulation ;
+    rdfs:range mso:SafetyIssue ;
+    rdfs:comment "A regulation addresses a specific safety issue"@en .
+
+# 2. Regulation → Article
+mso:contains a owl:ObjectProperty ;
+    rdfs:label "contains"@en ;
+    rdfs:label "포함함"@ko ;
+    rdfs:domain mso:Regulation ;
+    rdfs:range mso:Article ;
+    rdfs:comment "A regulation contains specific articles"@en .
+
+# 3. Regulation → Regulation
+mso:cites a owl:ObjectProperty ;
+    rdfs:label "cites"@en ;
+    rdfs:label "인용함"@ko ;
+    rdfs:domain mso:Regulation ;
+    rdfs:range mso:Regulation ;
+    rdfs:comment "A regulation cites another regulation"@en .
+
+mso:supersedes a owl:ObjectProperty ;
+    rdfs:label "supersedes"@en ;
+    rdfs:label "대체함"@ko ;
+    rdfs:domain mso:Regulation ;
+    rdfs:range mso:Regulation ;
+    rdfs:comment "A regulation supersedes a previous regulation"@en .
+
+# 4. Regulation → VesselType
+mso:appliesTo a owl:ObjectProperty ;
+    rdfs:label "applies to"@en ;
+    rdfs:label "적용됨"@ko ;
+    rdfs:domain mso:Regulation ;
+    rdfs:range mso:Vessel ;
+    rdfs:comment "A regulation applies to specific vessel types"@en .
+
+# 5. Article → Regulation
+mso:partOf a owl:ObjectProperty ;
+    rdfs:label "part of"@en ;
+    rdfs:label "~의 일부"@ko ;
+    rdfs:domain mso:Article ;
+    rdfs:range mso:Regulation ;
+    rdfs:comment "An article is part of a regulation"@en ;
+    owl:inverseOf mso:contains .
+
+# 6. Article → Action
+mso:requires a owl:ObjectProperty ;
+    rdfs:label "requires"@en ;
+    rdfs:label "요구함"@ko ;
+    rdfs:domain mso:Article ;
+    rdfs:range mso:Action ;
+    rdfs:comment "An article requires specific actions"@en .
+
+# 7. Article → Article
+mso:relatedTo a owl:ObjectProperty ;
+    rdfs:label "related to"@en ;
+    rdfs:label "관련됨"@ko ;
+    rdfs:domain mso:Article ;
+    rdfs:range mso:Article ;
+    rdfs:comment "An article is related to another article"@en ;
+    a owl:SymmetricProperty .
+
+# 8. MaritimeCase → Regulation
+mso:violated a owl:ObjectProperty ;
+    rdfs:label "violated"@en ;
+    rdfs:label "위반함"@ko ;
+    rdfs:domain mso:MaritimeCase ;
+    rdfs:range mso:Regulation ;
+    rdfs:comment "A case involved violation of a regulation"@en .
+
+mso:exampleOf a owl:ObjectProperty ;
+    rdfs:label "example of"@en ;
+    rdfs:label "~의 사례"@ko ;
+    rdfs:domain mso:MaritimeCase ;
+    rdfs:range mso:SafetyIssue ;
+    rdfs:comment "A case is an example of a safety issue"@en .
+
+# 9. MaritimeCase → Article
+mso:violatedArticle a owl:ObjectProperty ;
+    rdfs:label "violated article"@en ;
+    rdfs:label "조항 위반"@ko ;
+    rdfs:domain mso:MaritimeCase ;
+    rdfs:range mso:Article ;
+    rdfs:comment "A case violated a specific article"@en .
+
+# 10. MaritimeCase → Evidence
+mso:supportedBy a owl:ObjectProperty ;
+    rdfs:label "supported by"@en ;
+    rdfs:label "~로 뒷받침됨"@ko ;
+    rdfs:domain mso:MaritimeCase ;
+    rdfs:range mso:Evidence ;
+    rdfs:comment "A case is supported by evidence"@en .
+
+# 11. MaritimeCase → Lesson
+mso:teaches a owl:ObjectProperty ;
+    rdfs:label "teaches"@en ;
+    rdfs:label "교훈을 줌"@ko ;
+    rdfs:domain mso:MaritimeCase ;
+    rdfs:range mso:Lesson ;
+    rdfs:comment "A case teaches specific lessons"@en .
+
+# 12. MaritimeCase → MaritimeCase
+mso:relatedCase a owl:ObjectProperty ;
+    rdfs:label "related case"@en ;
+    rdfs:label "관련 사례"@ko ;
+    rdfs:domain mso:MaritimeCase ;
+    rdfs:range mso:MaritimeCase ;
+    rdfs:comment "Similar or related maritime cases"@en ;
+    a owl:SymmetricProperty .
+
+# 13. MaritimeCase → Vessel
+mso:involves a owl:ObjectProperty ;
+    rdfs:label "involves"@en ;
+    rdfs:label "관련 선박"@ko ;
+    rdfs:domain mso:MaritimeCase ;
+    rdfs:range mso:Vessel ;
+    rdfs:comment "A case involves specific vessels"@en .
+
+# 14. MaritimeCase → Actor
+mso:causedBy a owl:ObjectProperty ;
+    rdfs:label "caused by"@en ;
+    rdfs:label "~로 인해 발생"@ko ;
+    rdfs:domain mso:MaritimeCase ;
+    rdfs:range mso:Actor ;
+    rdfs:comment "A case was caused by an actor's actions"@en .
+
+# 15. Vessel → Actor
+mso:operatedBy a owl:ObjectProperty ;
+    rdfs:label "operated by"@en ;
+    rdfs:label "~에 의해 운영"@ko ;
+    rdfs:domain mso:Vessel ;
+    rdfs:range mso:Actor ;
+    rdfs:comment "A vessel is operated by an actor"@en .
+
+# 16. Vessel → Equipment
+mso:equippedWith a owl:ObjectProperty ;
+    rdfs:label "equipped with"@en ;
+    rdfs:label "~를 장착"@ko ;
+    rdfs:domain mso:Vessel ;
+    rdfs:range mso:Equipment ;
+    rdfs:comment "A vessel is equipped with specific equipment"@en .
+
+# 17. Vessel → Regulation
+mso:governedBy a owl:ObjectProperty ;
+    rdfs:label "governed by"@en ;
+    rdfs:label "~의 적용을 받음"@ko ;
+    rdfs:domain mso:Vessel ;
+    rdfs:range mso:Regulation ;
+    rdfs:comment "A vessel is governed by regulations"@en ;
+    owl:inverseOf mso:appliesTo .
+
+# 18. Evidence → MaritimeCase
+mso:supports a owl:ObjectProperty ;
+    rdfs:label "supports"@en ;
+    rdfs:label "뒷받침함"@ko ;
+    rdfs:domain mso:Evidence ;
+    rdfs:range mso:MaritimeCase ;
+    rdfs:comment "Evidence supports a case"@en ;
+    owl:inverseOf mso:supportedBy .
+
+# 19. Evidence → SafetyIssue
+mso:indicates a owl:ObjectProperty ;
+    rdfs:label "indicates"@en ;
+    rdfs:label "나타냄"@ko ;
+    rdfs:domain mso:Evidence ;
+    rdfs:range mso:SafetyIssue ;
+    rdfs:comment "Evidence indicates a safety issue"@en .
+
+# 20. Evidence → Actor
+mso:collectedBy a owl:ObjectProperty ;
+    rdfs:label "collected by"@en ;
+    rdfs:label "~에 의해 수집"@ko ;
+    rdfs:domain mso:Evidence ;
+    rdfs:range mso:Actor ;
+    rdfs:comment "Evidence was collected by an actor"@en .
+
+# 21. Action → Regulation
+mso:recommendedBy a owl:ObjectProperty ;
+    rdfs:label "recommended by"@en ;
+    rdfs:label "~에 의해 권고"@ko ;
+    rdfs:domain mso:Action ;
+    rdfs:range mso:Regulation ;
+    rdfs:comment "An action is recommended by a regulation"@en .
+
+# 22. Action → SafetyIssue
+mso:prevents a owl:ObjectProperty ;
+    rdfs:label "prevents"@en ;
+    rdfs:label "방지함"@ko ;
+    rdfs:domain mso:Action ;
+    rdfs:range mso:SafetyIssue ;
+    rdfs:comment "An action prevents a safety issue"@en .
+
+# 23. Action → MaritimeCase
+mso:appliedIn a owl:ObjectProperty ;
+    rdfs:label "applied in"@en ;
+    rdfs:label "~에서 적용"@ko ;
+    rdfs:domain mso:Action ;
+    rdfs:range mso:MaritimeCase ;
+    rdfs:comment "An action was applied in a case"@en .
+
+# 24. SafetyIssue → Evidence
+mso:evidencedBy a owl:ObjectProperty ;
+    rdfs:label "evidenced by"@en ;
+    rdfs:label "~로 확인됨"@ko ;
+    rdfs:domain mso:SafetyIssue ;
+    rdfs:range mso:Evidence ;
+    rdfs:comment "A safety issue is evidenced by data"@en ;
+    owl:inverseOf mso:indicates .
+
+# 25. SafetyIssue → Vessel
+mso:affects a owl:ObjectProperty ;
+    rdfs:label "affects"@en ;
+    rdfs:label "영향을 미침"@ko ;
+    rdfs:domain mso:SafetyIssue ;
+    rdfs:range mso:Vessel ;
+    rdfs:comment "A safety issue affects vessels"@en .
+
+# 26. Location → MaritimeCase
+mso:siteOf a owl:ObjectProperty ;
+    rdfs:label "site of"@en ;
+    rdfs:label "~의 발생 장소"@ko ;
+    rdfs:domain mso:Location ;
+    rdfs:range mso:MaritimeCase ;
+    rdfs:comment "A location is the site of a case"@en .
+
+# 27. Equipment → Vessel
+mso:installedOn a owl:ObjectProperty ;
+    rdfs:label "installed on"@en ;
+    rdfs:label "~에 설치됨"@ko ;
+    rdfs:domain mso:Equipment ;
+    rdfs:range mso:Vessel ;
+    rdfs:comment "Equipment is installed on a vessel"@en ;
+    owl:inverseOf mso:equippedWith .
+
+# 28. Equipment → MaritimeCase
+mso:malfunctionCaused a owl:ObjectProperty ;
+    rdfs:label "malfunction caused"@en ;
+    rdfs:label "고장으로 인한 사고"@ko ;
+    rdfs:domain mso:Equipment ;
+    rdfs:range mso:MaritimeCase ;
+    rdfs:comment "Equipment malfunction caused a case"@en .
+
+# ===============================================
+# DATA PROPERTIES (Attributes)
+# ===============================================
+
+# Regulation Properties
+mso:regulationId a owl:DatatypeProperty ;
+    rdfs:domain mso:Regulation ;
+    rdfs:range xsd:string .
+
+mso:titleKr a owl:DatatypeProperty ;
+    rdfs:domain owl:Thing ;
+    rdfs:range xsd:string ;
+    rdfs:label "Korean Title"@en .
+
+mso:titleEn a owl:DatatypeProperty ;
+    rdfs:domain owl:Thing ;
+    rdfs:range xsd:string ;
+    rdfs:label "English Title"@en .
+
+mso:category a owl:DatatypeProperty ;
+    rdfs:domain mso:Regulation ;
+    rdfs:range xsd:string .
+
+mso:fullTextKr a owl:DatatypeProperty ;
+    rdfs:domain owl:Thing ;
+    rdfs:range xsd:string .
+
+mso:fullTextEn a owl:DatatypeProperty ;
+    rdfs:domain owl:Thing ;
+    rdfs:range xsd:string .
+
+mso:legalWeight a owl:DatatypeProperty ;
+    rdfs:domain owl:Thing ;
+    rdfs:range xsd:integer .
+
+mso:effectiveDate a owl:DatatypeProperty ;
+    rdfs:domain mso:Regulation ;
+    rdfs:range xsd:date .
+
+mso:lastAmended a owl:DatatypeProperty ;
+    rdfs:domain mso:Regulation ;
+    rdfs:range xsd:date .
+
+mso:sourceUrl a owl:DatatypeProperty ;
+    rdfs:domain owl:Thing ;
+    rdfs:range xsd:anyURI .
+
+# Article Properties
+mso:articleId a owl:DatatypeProperty ;
+    rdfs:domain mso:Article ;
+    rdfs:range xsd:string .
+
+mso:articleNumber a owl:DatatypeProperty ;
+    rdfs:domain mso:Article ;
+    rdfs:range xsd:string .
+
+mso:contentKr a owl:DatatypeProperty ;
+    rdfs:domain owl:Thing ;
+    rdfs:range xsd:string .
+
+mso:contentEn a owl:DatatypeProperty ;
+    rdfs:domain owl:Thing ;
+    rdfs:range xsd:string .
+
+# SafetyIssue Properties
+mso:issueId a owl:DatatypeProperty ;
+    rdfs:domain mso:SafetyIssue ;
+    rdfs:range xsd:string .
+
+mso:nameKr a owl:DatatypeProperty ;
+    rdfs:domain owl:Thing ;
+    rdfs:range xsd:string .
+
+mso:nameEn a owl:DatatypeProperty ;
+    rdfs:domain owl:Thing ;
+    rdfs:range xsd:string .
+
+mso:severity a owl:DatatypeProperty ;
+    rdfs:domain mso:SafetyIssue ;
+    rdfs:range xsd:integer .
+
+mso:frequency a owl:DatatypeProperty ;
+    rdfs:domain mso:SafetyIssue ;
+    rdfs:range xsd:integer .
+
+# MaritimeCase Properties
+mso:caseId a owl:DatatypeProperty ;
+    rdfs:domain mso:MaritimeCase ;
+    rdfs:range xsd:string .
+
+mso:date a owl:DatatypeProperty ;
+    rdfs:domain owl:Thing ;
+    rdfs:range xsd:date .
+
+mso:location a owl:DatatypeProperty ;
+    rdfs:domain owl:Thing ;
+    rdfs:range xsd:string .
+
+mso:latitude a owl:DatatypeProperty ;
+    rdfs:domain owl:Thing ;
+    rdfs:range xsd:decimal .
+
+mso:longitude a owl:DatatypeProperty ;
+    rdfs:domain owl:Thing ;
+    rdfs:range xsd:decimal .
+
+mso:judgment a owl:DatatypeProperty ;
+    rdfs:domain mso:MaritimeCase ;
+    rdfs:range xsd:string .
+
+mso:penalty a owl:DatatypeProperty ;
+    rdfs:domain mso:MaritimeCase ;
+    rdfs:range xsd:string .
+
+mso:casualties a owl:DatatypeProperty ;
+    rdfs:domain mso:MaritimeCase ;
+    rdfs:range xsd:integer .
+
+mso:damageUsd a owl:DatatypeProperty ;
+    rdfs:domain mso:MaritimeCase ;
+    rdfs:range xsd:integer .
+
+# Vessel Properties
+mso:vesselId a owl:DatatypeProperty ;
+    rdfs:domain mso:Vessel ;
+    rdfs:range xsd:string .
+
+mso:vesselType a owl:DatatypeProperty ;
+    rdfs:domain mso:Vessel ;
+    rdfs:range xsd:string .
+
+mso:imoNumber a owl:DatatypeProperty ;
+    rdfs:domain mso:Vessel ;
+    rdfs:range xsd:string .
+
+mso:mmsi a owl:DatatypeProperty ;
+    rdfs:domain mso:Vessel ;
+    rdfs:range xsd:string .
+
+mso:flag a owl:DatatypeProperty ;
+    rdfs:domain mso:Vessel ;
+    rdfs:range xsd:string .
+
+mso:length a owl:DatatypeProperty ;
+    rdfs:domain mso:Vessel ;
+    rdfs:range xsd:decimal .
+
+mso:grossTonnage a owl:DatatypeProperty ;
+    rdfs:domain mso:Vessel ;
+    rdfs:range xsd:integer .
+
+# Evidence Properties
+mso:evidenceId a owl:DatatypeProperty ;
+    rdfs:domain mso:Evidence ;
+    rdfs:range xsd:string .
+
+mso:evidenceType a owl:DatatypeProperty ;
+    rdfs:domain mso:Evidence ;
+    rdfs:range xsd:string .
+
+mso:timestamp a owl:DatatypeProperty ;
+    rdfs:domain mso:Evidence ;
+    rdfs:range xsd:dateTime .
+
+mso:description a owl:DatatypeProperty ;
+    rdfs:domain owl:Thing ;
+    rdfs:range xsd:string .
+
+mso:reliability a owl:DatatypeProperty ;
+    rdfs:domain mso:Evidence ;
+    rdfs:range xsd:integer .
+
+mso:fileUrl a owl:DatatypeProperty ;
+    rdfs:domain mso:Evidence ;
+    rdfs:range xsd:anyURI .
+
+# Action Properties
+mso:actionId a owl:DatatypeProperty ;
+    rdfs:domain mso:Action ;
+    rdfs:range xsd:string .
+
+mso:actionType a owl:DatatypeProperty ;
+    rdfs:domain mso:Action ;
+    rdfs:range xsd:string .
+
+mso:priority a owl:DatatypeProperty ;
+    rdfs:domain mso:Action ;
+    rdfs:range xsd:integer .
+
+# Actor Properties
+mso:actorId a owl:DatatypeProperty ;
+    rdfs:domain mso:Actor ;
+    rdfs:range xsd:string .
+
+mso:role a owl:DatatypeProperty ;
+    rdfs:domain mso:Actor ;
+    rdfs:range xsd:string .
+
+mso:organization a owl:DatatypeProperty ;
+    rdfs:domain mso:Actor ;
+    rdfs:range xsd:string .
+
+mso:experienceYears a owl:DatatypeProperty ;
+    rdfs:domain mso:Actor ;
+    rdfs:range xsd:integer .
+
+# Lesson Properties
+mso:lessonId a owl:DatatypeProperty ;
+    rdfs:domain mso:Lesson ;
+    rdfs:range xsd:string .
+
+mso:textKr a owl:DatatypeProperty ;
+    rdfs:domain mso:Lesson ;
+    rdfs:range xsd:string .
+
+mso:textEn a owl:DatatypeProperty ;
+    rdfs:domain mso:Lesson ;
+    rdfs:range xsd:string .
+
+mso:importance a owl:DatatypeProperty ;
+    rdfs:domain mso:Lesson ;
+    rdfs:range xsd:integer .
+
+# Location Properties
+mso:locationId a owl:DatatypeProperty ;
+    rdfs:domain mso:Location ;
+    rdfs:range xsd:string .
+
+mso:locationType a owl:DatatypeProperty ;
+    rdfs:domain mso:Location ;
+    rdfs:range xsd:string .
+
+mso:waterDepth a owl:DatatypeProperty ;
+    rdfs:domain mso:Location ;
+    rdfs:range xsd:decimal .
+
+mso:trafficDensity a owl:DatatypeProperty ;
+    rdfs:domain mso:Location ;
+    rdfs:range xsd:integer .
+
+# Equipment Properties
+mso:equipmentId a owl:DatatypeProperty ;
+    rdfs:domain mso:Equipment ;
+    rdfs:range xsd:string .
+
+mso:equipmentType a owl:DatatypeProperty ;
+    rdfs:domain mso:Equipment ;
+    rdfs:range xsd:string .
+
+mso:manufacturer a owl:DatatypeProperty ;
+    rdfs:domain mso:Equipment ;
+    rdfs:range xsd:string .
+
+mso:model a owl:DatatypeProperty ;
+    rdfs:domain mso:Equipment ;
+    rdfs:range xsd:string .
+
+mso:operationalStatus a owl:DatatypeProperty ;
+    rdfs:domain mso:Equipment ;
+    rdfs:range xsd:string .
+
+# ===============================================
+# END OF ONTOLOGY
+# ===============================================
