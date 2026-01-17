@@ -1,11 +1,11 @@
 """
 FastAPI 백엔드 - Maritime Navigation System API
-(Neo4j Aura 연결 디버깅 버전)
+(프론트엔드 크래시 방지 패치 적용)
 """
 import os
 import sys
 import json
-import traceback  # 에러 상세 추적용
+import traceback
 from typing import List, Dict, Any, Optional
 
 # 경로 설정
@@ -40,7 +40,7 @@ SCENARIOS_PATH = os.path.join(DATA_DIR, "demo_scenarios.json")
 
 # RAG 엔진 관리
 rag_engine = None
-connection_error = None  # 연결 에러 메시지 저장용
+connection_error = None
 
 def get_rag_engine():
     global rag_engine, connection_error
@@ -48,14 +48,12 @@ def get_rag_engine():
     if rag_engine is not None:
         return rag_engine
 
-    # 환경 변수 가져오기
     NEO4J_URI = os.getenv("NEO4J_URI", "")
     NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")
     NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "")
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
-    # 로그에 설정 상태 출력 (비밀번호는 숨김)
-    print(f"🔌 Neo4j 연결 시도: URI={NEO4J_URI}, User={NEO4J_USER}, PW={'*' * len(NEO4J_PASSWORD) if NEO4J_PASSWORD else 'EMPTY'}")
+    print(f"🔌 Neo4j 연결 시도: URI={NEO4J_URI}, User={NEO4J_USER}")
 
     if not NEO4J_URI or not NEO4J_PASSWORD:
         connection_error = "Render 환경변수(NEO4J_URI 또는 NEO4J_PASSWORD)가 설정되지 않았습니다."
@@ -63,7 +61,6 @@ def get_rag_engine():
         return None
 
     try:
-        # 엔진 초기화 시도
         rag_engine = GraphGuidedRAG(
             neo4j_uri=NEO4J_URI,
             neo4j_user=NEO4J_USER,
@@ -71,18 +68,16 @@ def get_rag_engine():
             gemini_api_key=GEMINI_API_KEY,
             llm_model=os.getenv("LLM_MODEL", "gemini-2.5-flash")
         )
-        
-        # 연결 테스트 (실제 쿼리를 날려봄)
         rag_engine.driver.verify_connectivity()
         print("✅ Neo4j 연결 성공!")
-        connection_error = None  # 에러 초기화
+        connection_error = None
         return rag_engine
 
     except Exception as e:
         rag_engine = None
         connection_error = f"Neo4j 연결 실패: {str(e)}"
         print(f"❌ {connection_error}")
-        traceback.print_exc() # 로그에 상세 에러 출력
+        traceback.print_exc()
         return None
 
 # Pydantic 모델
@@ -95,7 +90,6 @@ class AnalyzeResponse(BaseModel):
     analysis: Dict[str, Any]
     reasoning_steps: List[Dict[str, Any]]
 
-# 파일 로드 헬퍼
 def load_json_file(filepath):
     if not os.path.exists(filepath):
         return []
@@ -111,11 +105,7 @@ async def root():
     status = "connected" if rag else "disconnected"
     return {
         "status": status,
-        "last_error": connection_error,
-        "env_check": {
-            "uri_set": bool(os.getenv("NEO4J_URI")),
-            "pw_set": bool(os.getenv("NEO4J_PASSWORD"))
-        }
+        "last_error": connection_error
     }
 
 @app.get("/scenarios")
@@ -143,14 +133,14 @@ async def analyze_situation(request: AnalyzeRequest):
     # 2. RAG 엔진 로드
     rag = get_rag_engine()
     
-    # 3. 연결 실패 시 에러를 JSON으로 예쁘게 반환 (500 에러 대신)
+    # 3. 연결 실패 시 에러 반환
     if not rag:
         error_msg = connection_error if connection_error else "알 수 없는 연결 오류"
         return AnalyzeResponse(
             scenario_id=request.scenario_id,
             analysis={
                 "error": "DB Connection Failed",
-                "recommendations": {
+                "recommendations": { # 여기는 딕셔너리라 안전함
                     "priority_actions": [],
                     "warnings": [f"DB 연결 실패: {error_msg}"]
                 }
@@ -159,7 +149,7 @@ async def analyze_situation(request: AnalyzeRequest):
                 {
                     "step_name": "Connection Error",
                     "description": "Neo4j 데이터베이스 연결 실패",
-                    "reasoning": f"상세 에러: {error_msg}\nRender 환경변수의 NEO4J_URI가 'neo4j+s://'로 시작하는지 확인하세요."
+                    "reasoning": f"상세 에러: {error_msg}"
                 }
             ]
         )
@@ -173,10 +163,15 @@ async def analyze_situation(request: AnalyzeRequest):
             reasoning_steps=result.get("reasoning_history", [])
         )
     except Exception as e:
-        # 실행 중 에러도 잡아서 보여줌
+        # [핵심 수정] 에러 발생 시 recommendations를 빈 딕셔너리({})로 반환
+        print(f"Runtime Error: {e}")
+        traceback.print_exc()
         return AnalyzeResponse(
             scenario_id=request.scenario_id,
-            analysis={"error": str(e), "recommendations": []},
+            analysis={
+                "error": str(e), 
+                "recommendations": {} # <-- 여기가 [] 였던 게 문제였습니다! {}로 수정됨.
+            },
             reasoning_steps=[{"step_name": "Runtime Error", "reasoning": str(e)}]
         )
 
