@@ -16,12 +16,15 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-# RAG 엔진 임포트
+# RAG 엔진 임포트 - Use improved version
 try:
-    from graph_rag_engine import GraphGuidedRAG
-except ImportError as e:
-    print(f"⚠️ 모듈 임포트 실패: {e}")
-    GraphGuidedRAG = None
+    from graph_rag_improved import ImprovedGraphGuidedRAG as GraphGuidedRAG
+except ImportError:
+    try:
+        from graph_rag_engine import GraphGuidedRAG
+    except ImportError as e:
+        print(f"⚠️ 모듈 임포트 실패: {e}")
+        GraphGuidedRAG = None
 
 app = FastAPI(title="Maritime API", version="1.0.0")
 
